@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">  
+        //  使用Vue reactivity + effect 实现响应式
+
+        // import { reactive, effect} from '../../../node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+
+        // // 1） 创建一个响应式对象 reactive
+
+        // const state = reactive({name:'gzy',age:18})
+
+        // // 2) effect 所有的渲染都是基于他来实现的 computed watch 组件
+        // // 默认叫响应式effect,数据变化后会重新执行此函数
+        // effect(()=>{
+        //     app.innerHTML = state.name + state.age
+        // })
+        // setTimeout(()=> {
+        //     state.name = 'ggg'
+        // },1000)
+
+        // 3) 属性会收集effect (数据的依赖收集) 数据会记录自己在那个effect中使用了，稍后数据变化可以找到对应的effect执行
+
+
+
+        // import { reactive } from './reactivity.js'
+        // const obj = {name:'gzy',age:18}
+
+        // 同一个对象创建两次代理对象，应该只需要代理一次就行，做一下缓存表
+        // const state1 = reactive(obj)
+        // const state2 = reactive(obj)
+        // console.log(state1 === state2)
+
+
+        // 代理过的对象继续代理 （已经被代理过的对象不能再代理了）
+        // const state1 = reactive(obj)
+        // const state2 = reactive(state1)
+        // console.log(state1 === state2)
+
+
+        import { reactive, effect} from './reactivity.js'
+
+        // 1） 创建一个响应式对象 reactive
+
+        const state = reactive({name:'gzy',age:18,address:'bj'})
+
+        // 2) effect 所有的渲染都是基于他来实现的 computed watch 组件
+        // 默认叫响应式effect,数据变化后会重新执行此函数
+        // effect(()=>{
+        //     app.innerHTML = state.name
+        // })
+
+        // state.age 
+
+        // effect(()=>{
+        //     app.innerHTML =  state.age
+        // })
+
+
+        // effect(()=>{
+        //     app.innerHTML = state.name
+        //     effect(()=>{
+        //         app.innerHTML = state.age
+        //     })
+        //     app.innerHTML = state.address
+        // })
+
+        effect(()=>{
+            state.name = Math.random()
+            app.innerHTML = state.name + state.age + state.name
+        })
+
+        setTimeout(()=>{
+            state.name = 'ggggg'
+        },2000)
+    </script>
+</body>
+</html> 

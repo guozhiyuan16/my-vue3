@@ -1,0 +1,54 @@
+Arguments: 
+  /Users/gzy/.nvm/versions/node/v20.3.0/bin/node /Users/gzy/.yarn/bin/yarn add esbuild-plugin-watch -S
+
+PATH: 
+  /Library/Frameworks/Python.framework/Versions/3.8/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/Users/gzy/.nvm/versions/node/v20.3.0/bin:/Users/gzy/.yarn/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/Users/gzy/.nvm/versions/node/v20.3.0/bin:/Users/gzy/.yarn/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin/python3:/usr/bin/python3
+
+Yarn version: 
+  1.22.18
+
+Node version: 
+  20.3.0
+
+Platform: 
+  darwin arm64
+
+Trace: 
+  Error: https://registry.npm.taobao.org/esbuild-plugin-watch: Not found
+      at params.callback [as _callback] (/Users/gzy/.yarn/lib/node_modules/yarn/lib/cli.js:66138:18)
+      at self.callback (/Users/gzy/.yarn/lib/node_modules/yarn/lib/cli.js:140883:22)
+      at Request.emit (node:events:511:28)
+      at Request.<anonymous> (/Users/gzy/.yarn/lib/node_modules/yarn/lib/cli.js:141855:10)
+      at Request.emit (node:events:511:28)
+      at IncomingMessage.<anonymous> (/Users/gzy/.yarn/lib/node_modules/yarn/lib/cli.js:141777:12)
+      at Object.onceWrapper (node:events:625:28)
+      at IncomingMessage.emit (node:events:523:35)
+      at endReadableNT (node:internal/streams/readable:1367:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+npm manifest: 
+  {
+    "name": "vue3",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "dev": "node scripts/dev.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "vue": "^3.3.4"
+    },
+    "devDependencies": {
+      "esbuild": "^0.19.2"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
