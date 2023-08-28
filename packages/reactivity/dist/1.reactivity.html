@@ -48,7 +48,7 @@
 
         // 1） 创建一个响应式对象 reactive
 
-        const state = reactive({name:'gzy',age:18,address:'bj'})
+        const state = reactive({name:'gzy',age:18, address:'bj'})
 
         // 2) effect 所有的渲染都是基于他来实现的 computed watch 组件
         // 默认叫响应式effect,数据变化后会重新执行此函数
@@ -63,18 +63,18 @@
         // })
 
 
-        // effect(()=>{
-        //     app.innerHTML = state.name
-        //     effect(()=>{
-        //         app.innerHTML = state.age
-        //     })
-        //     app.innerHTML = state.address
-        // })
-
         effect(()=>{
-            state.name = Math.random()
-            app.innerHTML = state.name + state.age + state.name
+            app.innerHTML = state.name
+            effect(()=>{
+                app.innerHTML = state.age
+            })
+            app.innerHTML = state.address
         })
+
+        // effect(()=>{
+        //     // state.name = Math.random()
+        //     app.innerHTML = state.name + state.age + state.name
+        // })
 
         setTimeout(()=>{
             state.name = 'ggggg'

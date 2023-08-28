@@ -1,29 +1,58 @@
 export let activeEffect = undefined // 先把自己放到全局
 
+function cleanupEffect(effect){ // 在收集的列表中将自己移除掉
+    const { deps } = effect
+    for(let i = 0 ; i < deps.length;i++){
+        // 找到set ，让set移除掉自己
+        deps[i].delete(effect)
+    }
+    effect.deps.length = 0 // 清空依赖的列表
+}
+
 export class ReactiveEffect {
     // 默认会将fn挂载到类的实例上
-    constructor(private fn){ }
+    constructor(private fn, public scheduler){ }
     parent = undefined
+    active = true
     deps = [] // 依赖了那些列表
     run(){
+        // 失活态默认调用run的时候 只是重新执行 不会发生依赖收集
+        if(!this.active){
+            return this.fn()
+        }
+
         try{
             this.parent = activeEffect
             activeEffect = this
-            return this.fn()
+
+            cleanupEffect(this) // 清理了上一次的依赖收集
+
+            return this.fn() // fn执行会触发依赖收集
         } finally {
             activeEffect = this.parent
             this.parent = undefined
         }
     }
     stop(){
-        
+        if(this.active){
+             // 变为失活态，停止依赖收集
+            this.active = false
+            cleanupEffect(this)
+        }
     }
 }
 
-export function effect(fn){
+export function effect(fn, options: any = {}){
     // 创建一个响应式effect,并且让effect执行
-    const _effect = new ReactiveEffect(fn)
+    const _effect = new ReactiveEffect(fn, options.scheduler)
     _effect.run()
+
+    // 把runner方法直接给用户， 用户可以直接去调用effect中定义的内容
+    const runner = _effect.run.bind(_effect)
+    // 可以通过runner拿到effect中的所有属性
+    runner.effect = _effect
+
+    return runner
 }
 
 // 映射表结构应该是这样
@@ -50,10 +79,16 @@ export function track(target,key){
             depsMap.set(key, (dep = new Set()))
         }
 
-        // 如果有则看一下set中有没有这个effect
+        // 如果有则看一下set中有没有这个effect（去重）
         let shouldTrack = !dep.has(activeEffect)
         if(shouldTrack){
             dep.add(activeEffect)
+
+            
+            // name = new Set(effect)
+            // age = new Set(effect)
+
+            // 我可以通过当前的effect 找到这两个集合中的自己 将其移除掉就可以了
             activeEffect.deps.push(dep)
         }
     }
@@ -68,8 +103,18 @@ export function trigger(target,key,newVal,oldVal){
 
     const dep = depsMap.get(key); // name 或者 age对应的所有 effect
 
-    dep && dep.forEach(effect => {
-        // 正在执行的effect , 不要多次执行
-        if(effect !== activeEffect) effect.run()
-    })
+    const effects = [...dep]
+    // 运行的是数组 删除的是set
+    effects && 
+        effects.forEach(effect => {
+            // 正在执行的effect , 不要多次执行
+            if(effect !== activeEffect){
+                if(effect.scheduler){
+                    effect.scheduler() // 用户传递了对应的更新函数则调用此函数
+                    // 用户如果没有传递则默认就是重新运行effect函数
+                }else{
+                    effect.run()
+                }
+            } 
+        })
 }

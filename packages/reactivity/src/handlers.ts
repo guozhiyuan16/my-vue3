@@ -1,5 +1,6 @@
-import { activeEffect, track, trigger } from "./effect"
-import { ReactiveFlags } from "./reactivity"
+import { isObject } from "@vue/shared"
+import { track, trigger } from "./effect"
+import { ReactiveFlags, reactive } from "./reactivity"
 
 
 export const mutableHandlers = {
@@ -8,9 +9,12 @@ export const mutableHandlers = {
         // 我们在使用proxy的时候要搭配reflect来使用，用来解决this问题
         // 取值的时候,让这个属性 和 effect产生关系
         // return target[key]
-        console.log(activeEffect,key)
         if(key === ReactiveFlags.IS_REACTIVE){
             return true
+        }
+        // 如果在取值的时候发现取出来的值是对象，那么再次进行代理，返回代理后的结果
+        if(isObject(target[key])){
+            return reactive(target[key])
         }
 
         // 做依赖收集 记录属性和当前effect的关系

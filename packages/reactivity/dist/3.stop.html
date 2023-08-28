@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script type="module">
+        // import { reactive, effect} from '../../../node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+        import { reactive, effect } from './reactivity.js'
+
+        const state = reactive({ name: 'gzy' ,address: {n : 401 }})
+        let a = 1
+        // 原生effect中调用effect会有一个runner返回值
+        const runner = effect(() => {
+            console.log('runner')
+            app.innerHTML = state.address.n + a
+        }, {
+            scheduler: () => {
+                setTimeout(() => {
+                    // 组件的异步渲染
+                    runner()
+                }, 5000)
+            }
+        })
+
+        setTimeout(() => {
+            console.log('timer')
+            state.address.n = '502'
+        }, 1000)
+
+        // runner.effect.stop(); // 停止effect的响应式能力， 不再收集相关依赖了
+
+        // 默认情况下是自动的更新， 数据变化后更新 effect
+        // 数据变化不更新，我可以自己决定更新
+        // setTimeout(()=>{
+        //     state.name = 'ggggg'
+        //     // state.name = 'a'
+        //     // state.name = 'b'
+        //     a = 100
+        //     // runner.effect.run() // forceUpdate
+        //     runner()
+
+        //     state.name = 'zzzz'
+        // },2000)
+    </script>
+</body>
+
+</html>
