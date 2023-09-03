@@ -29,3 +29,8 @@ export function reactive(target){
     // 2) 目前不用创建反向映射表， 用的方式是，r如果这个对象被代理过了说明已经被proxy拦截过了
     return proxy
 }
+
+// 是不是一个响应式对象
+export function isReactive(value){
+    return value[ReactiveFlags.IS_REACTIVE]
+}

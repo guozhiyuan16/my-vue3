@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>watch</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        // vue -> runtime-dom -> runtime-core -> reactivity
+        // import { reactive, effect, watch} from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+        import { reactive, effect, watch} from './reactivity.js'
+
+        const state = reactive({name: 'gzy' , address: { n : 401 }})
+
+        // 对象是无法监控到前后值的更改
+        // watch 可以监控对象 监控函数
+        // 性能差，会访问对象中的所有属性，进行取值操作
+        watch(state, (newVal, oldVal)=>{
+            console.log('数据变化了',newVal, oldVal)
+        }, { flush: 'sync' })
+        state.name = 'ggggg'
+        console.log('数据变化outer')
+
+        
+        // state.name 监控的是一个固定值，不能这样写
+        // ()=> state 不能这样写，没有访问对象中的属性，没有取值操作，没有收集依赖
+        // watch(()=> state.name, (newVal, oldVal)=>{
+        //     console.log('数据变化了',newVal, oldVal)
+        // }, { flush: 'sync' })
+        // state.name = 'ggggg'
+        // console.log('数据变化outer')
+
+        // 发现 先打印的 数据变化outer 然后才打印 数据变化了 -> 默认的watch是异步的
+
+        // {flush: 'sync'} 表示同步的调用watch
+
+    </script>
+</body>
+</html>

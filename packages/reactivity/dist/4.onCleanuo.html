@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>watch</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        import { reactive, effect, watch} from './reactivity.js'
+
+        const state = reactive({name: 'gzy' , address: { n : 401 },age:1})
+
+        watch(()=> state.name, (newVal, oldVal, onCleanup)=>{
+            let flag = true
+            onCleanup(function(){
+                flag = false
+            })
+            flag && (app.innerHTML = r)
+        }, { flush: 'sync' })
+        state.age = '11'
+        state.age = '111'
+        state.age = '1111'
+    </script>
+</body>
+</html>
