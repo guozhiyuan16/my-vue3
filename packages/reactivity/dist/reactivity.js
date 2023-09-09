@@ -62,11 +62,14 @@ function track(target, key) {
     if (!dep) {
       depsMap.set(key, dep = /* @__PURE__ */ new Set());
     }
-    let shouldTrack = !dep.has(activeEffect);
-    if (shouldTrack) {
-      dep.add(activeEffect);
-      activeEffect.deps.push(dep);
-    }
+    trackEffect(dep);
+  }
+}
+function trackEffect(dep) {
+  let shouldTrack = !dep.has(activeEffect);
+  if (shouldTrack) {
+    dep.add(activeEffect);
+    activeEffect.deps.push(dep);
   }
 }
 function trigger(target, key, newVal, oldVal) {
@@ -75,6 +78,9 @@ function trigger(target, key, newVal, oldVal) {
     return;
   }
   const dep = depsMap.get(key);
+  triggerEffect(dep);
+}
+function triggerEffect(dep) {
   const effects = [...dep];
   effects && effects.forEach((effect2) => {
     if (effect2 !== activeEffect) {
@@ -92,6 +98,9 @@ var mutableHandlers = {
   get(target, key, receiver) {
     if (key === "_v_isReactive" /* IS_REACTIVE */) {
       return true;
+    }
+    if (target[key] && target[key].__v_isRef) {
+      return target[key].value;
     }
     if (isObject(target[key])) {
       return reactive(target[key]);
@@ -179,16 +188,89 @@ function dowatch(source, cb) {
   const effect2 = new ReactiveEffect(getter, job);
   oldVal = effect2.run();
 }
+
+// packages/reactivity/src/computed.ts
+var ComputedRefImpl = class {
+  constructor(getter, setter) {
+    this._dirty = true;
+    this.dep = /* @__PURE__ */ new Set();
+    this.__v_isRef = true;
+    this.effect = new ReactiveEffect(getter, () => {
+      if (!this._dirty) {
+        this._dirty = true;
+        triggerEffect(this.dep);
+      }
+    });
+  }
+  get value() {
+    trackEffect(this.dep);
+    if (this._dirty) {
+      this._value = this.effect.run();
+      this._dirty = false;
+    }
+    return this._value;
+  }
+  set value(newVal) {
+    this.setter(newVal);
+  }
+};
+function computed(getterOrOptions) {
+  let getter;
+  let setter;
+  const isGetter = isFunction(getterOrOptions);
+  if (isGetter) {
+    getter = getterOrOptions;
+    setter = () => {
+      console.log("warn");
+    };
+  } else {
+    getter = getterOrOptions.get;
+    setter = getterOrOptions.set;
+  }
+  return new ComputedRefImpl(getter, setter);
+}
+
+// packages/reactivity/src/ref.ts
+function toReactive(value) {
+  return isObject(value) ? reactive(value) : value;
+}
+var RefImpl = class {
+  constructor(rawValue) {
+    this.rawValue = rawValue;
+    this.dep = /* @__PURE__ */ new Set();
+    this.__v_isRef = true;
+    this._value = toReactive(rawValue);
+  }
+  get value() {
+    trackEffect(this.dep);
+    return this._value;
+  }
+  set value(newVal) {
+    if (newVal !== this.rawValue) {
+      this.rawValue = newVal;
+      this._value = toReactive(newVal);
+      triggerEffect(this.dep);
+    }
+  }
+};
+function ref(value) {
+  return new RefImpl(value);
+}
 export {
   ReactiveEffect,
   ReactiveFlags,
   activeEffect,
+  computed,
   dowatch,
   effect,
   isReactive,
   reactive,
+  ref,
+  toReactive,
   track,
+  trackEffect,
   trigger,
+  triggerEffect,
   watch,
   watchEffect
 };

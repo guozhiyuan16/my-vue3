@@ -11,7 +11,7 @@ function cleanupEffect(effect){ // 在收集的列表中将自己移除掉
 
 export class ReactiveEffect {
     // 默认会将fn挂载到类的实例上
-    constructor(private fn, public scheduler){ }
+    constructor(private fn, public scheduler?){ }
     parent = undefined
     active = true
     deps = [] // 依赖了那些列表
@@ -80,17 +80,20 @@ export function track(target,key){
         }
 
         // 如果有则看一下set中有没有这个effect（去重）
-        let shouldTrack = !dep.has(activeEffect)
-        if(shouldTrack){
-            dep.add(activeEffect)
+        trackEffect(dep)
+    }
+}
 
-            
-            // name = new Set(effect)
-            // age = new Set(effect)
+export function trackEffect(dep){
+    let shouldTrack = !dep.has(activeEffect)
+    if(shouldTrack){
+        dep.add(activeEffect)
 
-            // 我可以通过当前的effect 找到这两个集合中的自己 将其移除掉就可以了
-            activeEffect.deps.push(dep)
-        }
+        // name = new Set(effect)
+        // age = new Set(effect)
+
+        // 我可以通过当前的effect 找到这两个集合中的自己 将其移除掉就可以了
+        activeEffect.deps.push(dep)
     }
 }
 
@@ -103,6 +106,10 @@ export function trigger(target,key,newVal,oldVal){
 
     const dep = depsMap.get(key); // name 或者 age对应的所有 effect
 
+    triggerEffect(dep)
+}
+
+export function triggerEffect(dep){
     const effects = [...dep]
     // 运行的是数组 删除的是set
     effects && 

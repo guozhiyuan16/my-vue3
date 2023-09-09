@@ -1,20 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>watch</title>
+    <title>computed</title>
 </head>
+
 <body>
     <div id="app"></div>
     <script type="module">
         // vue -> runtime-dom -> runtime-core -> reactivity
-        import { reactive, effect, watch, watchEffect,computed} from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
-        // import { reactive, effect, watch, watchEffect} from './reactivity.js'
+        // import { reactive, effect, watch, watchEffect,computed} from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+        import { reactive, effect, watch, watchEffect, computed } from './reactivity.js'
 
-        const state = reactive({name: 'gzy' , address: { n : 401 }})
+        // const state = reactive({firstname: 'g' , lastname: 'zy'})
+        // 计算属性的应用场景 主要是根据其他的数据进行衍生数据的
+        // 计算属性默认是懒执行的 如果依赖的值不发生变化不会重新执行 dirty 缓存
+        // 计算属性的值自身服务修改
+        // 依赖的值变化了，后续再取值可以获取到新值
+
+        // 可以传一个函数
+        // computed(()=>{
+
+        // })
+
+        // 可以传一个对象
+        // const fullname = computed({
+        //     get(){
+        //         console.log('getter')
+        //         return state.firstname + state.lastname
+        //     },
+        //     set(val){ // 改计算属性可以导致修改其他属性
+        //         console.log(val)
+        //     } 
+        // })
+
+        // effect(()=> {
+        //     app.innerHTML = fullname.value
+        // })
+
+        // 只打印一次getter ，缓存
+        // console.log(fullname.value)
+        // console.log(fullname.value)
+        // console.log(fullname.value)
+
+        // console.log(fullname.value)
+        // console.log(fullname.value)
+        // state.firstname = 'hello'
+        // console.log(fullname.value)
+
+        // effect(()=>{
+        //     app.innerHTML = fullname
+        // })
+
+        // setTimeout(()=>{
+        //     state.firstname = 'hello'
+        // },2000)
 
 
-</script>
+
+        const fullname = computed({
+            get() {
+                console.log('getter')
+                return state.firstname + state.lastname
+            },
+            set(val) { // 改计算属性可以导致修改其他属性
+                console.log(val)
+            }
+        })
+
+        const state = reactive({ firstname: 'g', lastname: 'zy', fullname })
+
+        effect(() => {
+            app.innerHTML = state.fullname
+        })
+
+        setTimeout(() => {
+            state.firstname = 'hello'
+        }, 2000)
+
+        // const abc = 123
+
+        // let obj = {
+        //     _value: abc,
+        //     get value(){
+        //         // 依赖收集
+        //         return this._value
+        //     },
+        //     set(xxx){
+        //         this._value = xxx
+        //     }
+        // }
+    </script>
 </body>
+
 </html>

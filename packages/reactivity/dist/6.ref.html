@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ref</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script type="module">
+        // import { reactive, effect, watch, watchEffect, computed, ref } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+        import { reactive, effect, watch, watchEffect, computed, ref } from './reactivity.js'
+
+        let flag = ref(true) // 装包，就是将变量在包装一层，里面还有依赖收集功能（类似computed）
+
+        effect(() => {
+            app.innerHTML = flag.value
+        })
+
+        setTimeout(() => {
+            flag.value = false
+        }, 1000)
+
+        // let r = ref({}) // 如果传入的事对象会变成proxy对象
+        // console.log(r.value)
+    </script>
+</body>
+
+</html>
