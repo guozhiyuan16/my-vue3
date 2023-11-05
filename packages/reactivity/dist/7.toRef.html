@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>toRef</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script type="module">
+       //  import { reactive, effect, watch, watchEffect, computed, ref, toRef, toRefs, proxyRefs } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+       import { reactive, effect, watch, watchEffect, computed, ref, toRef, toRefs, proxyRefs } from './reactivity.js'
+
+        const state = reactive({ name: 'gzy', age: 30 })
+
+        // 这样就取出的事一个普通值，不是响应式的了 => 将reactive中的值转化成ref来使用 (一个个转)
+        // let name = state.name
+        // let name = toRef(state,'name')
+        let { name, age } = toRefs(state) // 响应式数据的结构
+        console.log(name)
+        watchEffect(() => { // 代理模式 proxy
+            // 自己不会用，模版取值
+           let ctx = proxyRefs({name,age})
+
+           // ctx.name -> name.value -> state.name
+            app.innerHTML = ctx.name + ctx.age // name.value => state.name
+        })
+
+        setTimeout(() => {
+            state.name = 'xxx'
+        }, 1000)
+
+        // vue中的模版使用ref值的时候会自动脱ref
+    </script>
+</body>
+
+</html>

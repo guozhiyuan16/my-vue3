@@ -1,3 +1,113 @@
+// packages/runtime-dom/src/nodeOps.ts
+var nodeOps = {
+  createElement(element) {
+    return document.createElement(element);
+  },
+  createText(text) {
+    return document.createTextNode(text);
+  },
+  insert(element, container, anchor = null) {
+    container.insertBefore(element, anchor);
+  },
+  remove(child) {
+    const parent = child.parentNodel;
+    if (parent) {
+      parent.removeChild(child);
+    }
+  },
+  querySelector(selector) {
+    return document.querySelector(selector);
+  },
+  setElementText(element, text) {
+    element.textContent = text;
+  },
+  setText(textNode, text) {
+    textNode.nodeValue = text;
+  },
+  createComment(text) {
+    return document.createComment(text);
+  },
+  nextSibling(element) {
+    return element.nextSibling;
+  },
+  parentNode(element) {
+    return element.parentNode;
+  }
+};
+
+// packages/runtime-dom/src/modules/attr.ts
+function patchAttr(el, key, nextVal) {
+  if (nextVal) {
+    el.setAttribute(key, nextVal);
+  } else {
+    el.removeAttribute(key);
+  }
+}
+
+// packages/runtime-dom/src/modules/class.ts
+function patchClass(el, nextVal) {
+  if (nextVal == null) {
+    el.removeAttribute("class");
+  } else {
+    el.className = nextVal;
+  }
+}
+
+// packages/runtime-dom/src/modules/event.ts
+function createInvoker(nextVal) {
+  const fn = (e) => {
+    fn.value(e);
+  };
+  fn.value = nextVal;
+  return fn;
+}
+function patchEvent(el, rawName, nextVal) {
+  const invokers = el._vei || (el._vei = {});
+  let eventName = rawName.slice(2).toLowerCase();
+  const existingInvoker = invokers[eventName];
+  if (nextVal && existingInvoker) {
+    existingInvoker.value = nextVal;
+  } else {
+    if (nextVal) {
+      const invoker = invokers[eventName] = createInvoker(nextVal);
+      el.addEventListener(eventName, invoker);
+    } else if (existingInvoker) {
+      el.removeEventListener(eventName, existingInvoker);
+      invokers[eventName] = null;
+    }
+  }
+}
+
+// packages/runtime-dom/src/modules/style.ts
+function patchStyle(el, prevVal, nextVal) {
+  const style = el.style;
+  if (nextVal) {
+    for (let key in nextVal) {
+      style[key] = nextVal[key];
+    }
+  }
+  if (prevVal) {
+    for (let key in prevVal) {
+      if (nextVal[key] === null) {
+        style[key] = null;
+      }
+    }
+  }
+}
+
+// packages/runtime-dom/src/patchProps.ts
+function patchProp(el, key, prevVal, nextVal) {
+  if (key === "class") {
+    patchClass(el, nextVal);
+  } else if (key === "style") {
+    patchStyle(el, prevVal, nextVal);
+  } else if (/^on[^a-z]/.test(key)) {
+    patchEvent(el, key, nextVal);
+  } else {
+    patchAttr(el, key, nextVal);
+  }
+}
+
 // packages/shared/src/index.ts
 var isObject = (value) => {
   return value !== null && typeof value === "object";
@@ -5,6 +115,118 @@ var isObject = (value) => {
 var isFunction = (value) => {
   return typeof value === "function";
 };
+var isString = (value) => {
+  return typeof value === "string";
+};
+
+// packages/runtime-core/src/renderer.ts
+function createRenderer(renderOptions2) {
+  const {
+    createElement: hostCreateElement,
+    createText: hostCreateText,
+    insert: hostInsert,
+    remove: hostRemove,
+    querySelector: hostQuerySelector,
+    setElementText: hostSetElementText,
+    setText: hostSetText,
+    createComment: hostCreateComment,
+    nextSibling: hostNextSibling,
+    parentNode: hostParentNode,
+    patchProp: hostPatchProp
+  } = renderOptions2;
+  const mountChildren = (children, container) => {
+    console.log("children", children);
+    children.forEach((child) => {
+      console.log("child", child);
+      patch(null, child, container);
+    });
+  };
+  const mountElement = (vnode, container) => {
+    const { type, props, children, shapeFlag } = vnode;
+    const el = vnode.el = hostCreateElement(type);
+    if (props) {
+      for (let key in props) {
+        hostPatchProp(el, key, null, props[key]);
+      }
+    }
+    if (children) {
+      if (shapeFlag && 8 /* TEXT_CHILDREN */) {
+        hostSetElementText(el, children);
+      } else if (shapeFlag && 16 /* ARRAY_CHILDREN */) {
+        mountChildren(children, el);
+      }
+    }
+    hostInsert(el, container);
+  };
+  const patch = (n1, n2, container) => {
+    if (n1 == null) {
+      mountElement(n2, container);
+    } else {
+    }
+  };
+  const render2 = (vnode, container) => {
+    console.log(vnode, container);
+    if (vnode == null) {
+    } else {
+      patch(container._vnode || null, vnode, container);
+    }
+    container._vnode = vnode;
+  };
+  return {
+    render: render2
+  };
+}
+
+// packages/runtime-core/src/createVNode.ts
+function isVNode(value) {
+  return !!value.__v_isVNode;
+}
+function createVNode(type, props, children = null) {
+  const shapeFlag = isString(type) ? 1 /* ELEMENT */ : 0;
+  const vnode = {
+    __v_isVNode: true,
+    type,
+    props,
+    children,
+    key: props == null ? void 0 : props.key,
+    el: null,
+    shapeFlag
+  };
+  if (children) {
+    let type2 = 0;
+    if (Array.isArray(children)) {
+      type2 = 16 /* ARRAY_CHILDREN */;
+    } else {
+      vnode.children = String(children);
+      type2 = 8 /* TEXT_CHILDREN */;
+    }
+    vnode.shapeFlag |= type2;
+  }
+  return vnode;
+}
+
+// packages/runtime-core/src/h.ts
+function h(type, propsOrChildren, children) {
+  const l = arguments.length;
+  if (l == 2) {
+    if (isObject(propsOrChildren) && !Array.isArray(propsOrChildren)) {
+      if (isVNode(propsOrChildren)) {
+        return createVNode(type, null, [propsOrChildren]);
+      }
+      return createVNode(type, propsOrChildren);
+    } else {
+      return createVNode(type, null, propsOrChildren);
+    }
+  } else {
+    if (l > 3) {
+      children = Array.from(arguments).slice(2);
+    }
+    if (l === 3 && isVNode(children)) {
+      children = [children];
+    }
+    return createVNode(type, propsOrChildren, children);
+  }
+}
 
 // packages/reactivity/src/effect.ts
 var activeEffect = void 0;
@@ -299,18 +521,33 @@ function proxyRefs(object) {
     }
   });
 }
+
+// packages/runtime-dom/src/index.ts
+var renderOptions = Object.assign(nodeOps, { patchProp });
+function createRenderer2(renderOptions2) {
+  return createRenderer(renderOptions2);
+}
+function render(vnode, container) {
+  const renderer = createRenderer2(renderOptions);
+  return renderer.render(vnode, container);
+}
 export {
   ReactiveEffect,
   ReactiveFlags,
   activeEffect,
   computed,
+  createRenderer2 as createRenderer,
+  createVNode,
   dowatch,
   effect,
+  h,
   isReactive,
   isRef,
+  isVNode,
   proxyRefs,
   reactive,
   ref,
+  render,
   toReactive,
   toRef,
   toRefs,
@@ -321,4 +558,4 @@ export {
   watch,
   watchEffect
 };
-//# sourceMappingURL=reactivity.js.map
+//# sourceMappingURL=runtime-dom.js.map
